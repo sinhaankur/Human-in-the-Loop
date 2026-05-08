@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-lib
 dist-ssr
 .DS_Store
 *.local
@@ -7,3 +8,4 @@ dist-ssr
 .env
 .env.local
 *.tsbuildinfo
+*.tgz

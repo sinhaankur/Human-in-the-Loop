@@ -1,13 +1,54 @@
 {
-  "name": "human-in-the-loop",
-  "private": true,
+  "name": "sentinel-react",
+  "private": false,
   "version": "0.1.0",
+  "description": "Inline AI oversight plugin — wraps host AI tool output with confidence, evidence, hallucination flags, and a verdict workflow, in place.",
+  "license": "MIT",
+  "author": "Ankur Sinha",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sinhaankur/Human-in-the-Loop.git"
+  },
+  "keywords": [
+    "react",
+    "ai",
+    "human-in-the-loop",
+    "trust-and-safety",
+    "oversight",
+    "hallucination",
+    "confidence"
+  ],
   "type": "module",
+  "main": "./dist-lib/sentinel.cjs",
+  "module": "./dist-lib/sentinel.mjs",
+  "types": "./dist-lib/lib-entry.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist-lib/lib-entry.d.ts",
+      "import": "./dist-lib/sentinel.mjs",
+      "require": "./dist-lib/sentinel.cjs"
+    },
+    "./styles.css": "./dist-lib/styles.css"
+  },
+  "files": [
+    "dist-lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:lib": "vite build --config vite.lib.config.ts",
+    "pack:lib": "npm run build:lib && npm pack",
     "preview": "vite preview",
     "lint": "tsc -b --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",
@@ -21,9 +62,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.471.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-router-dom": "^7.1.5",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
@@ -32,8 +70,12 @@
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.5",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.7.2",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "vite-plugin-dts": "^4.5.4"
   }
 }
