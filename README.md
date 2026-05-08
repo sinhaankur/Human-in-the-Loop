@@ -1,113 +1,106 @@
-# Sentinel — AI Trust & Safety
+# Sentinel — inline AI oversight plugin
 
-A multi-tenant dashboard for **human oversight of high-stakes AI** across healthcare, legal, and finance. The core UX problem isn't the model's output — it's how a human expert validates, corrects, and audits it without drowning in noise.
+An **embeddable oversight layer** for AI tools in high-stakes domains. Sentinel doesn't replace the host AI tool — it wraps the AI's output *in place* so the human expert can validate, correct, and audit without leaving their workflow.
 
-> Live prototype · React + TypeScript + Tailwind v4 · mock data · ~7.4 kLoC
-
----
-
-## The problem
-
-In regulated industries, the reviewer is the source of truth — not the model. They face three failure modes:
-
-1. **Rubber-stamping** — accepting AI output they should have caught
-2. **Drowning** — losing signal when "uncertainty" alarms blur together
-3. **No paper trail** — being unable to defend a decision after the fact
-
-Every UX decision in Sentinel is aimed at one of those three.
+> Live demo · React + TypeScript + Tailwind v4 · simulated host AI tools across radiology, legal, finance.
 
 ---
 
-## The design moves
+## The thesis
 
-### 1. Uncertainty without overwhelming
+Every AI tool today reinvents oversight badly. Some show a confidence number. Some highlight "low confidence" rows. Almost none distinguish hallucination from low confidence, surface evidence anchors, or capture the reviewer's correction in a way that closes the loop.
 
-**Calibrated language over raw percentages.** Numbers create false precision and fatigue. The reviewer sees `Likely`, `Unsure`, `Low` — bands that match how clinicians, lawyers, and analysts already speak. The exact `73%` is one hover away.
+**Sentinel is a single oversight layer that any AI tool can drop in.** Same primitives, same intervention model, same audit shape — whether the host AI is a radiology workstation, a contract review tool, or a fraud case manager.
 
-**Progressive disclosure across three depths.** The same model state is rendered differently as the reviewer drills in:
-
-| Surface | Confidence rendering |
-|---|---|
-| Queue row | Single badge + tiny inline distribution sparkline |
-| Review card header | Badge with value |
-| Review card body | Full top-k stacked alternatives with labels |
-
-Reviewer pulls more detail only when a row asks for it. They never get the firehose by default.
-
-**Distribution, not just confidence.** A "94% confident" score hides whether the model was choosing between two near-identical alternatives or was genuinely sure. The stacked alternatives bar makes "uncertainty *about what*" legible — that's the part that matters for the reviewer's next action.
-
-### 2. Hallucination ≠ low confidence
-
-The most important visual decision in the system. Both look "concerning" — but a *low-confidence* model is asking for a closer look; a *hallucinating* model is fabricating. They demand different reviewer responses, so they get different visual languages:
-
-- **Hallucination chips** use a diagonal cross-hatch — never reads as just another warning
-- **Low-confidence chips** use a soft pulse on the dot
-- **Out-of-distribution** has its own iconography
-- The pattern (not just color) carries the distinction — works for color-vision-deficient reviewers too
-
-**Provenance as the antidote.** Every claim either anchors to an `EvidenceLink` (with the source quote on hover) or renders `No source cited` with the same hatch pattern. There is no neutral state — the *absence* of grounding is surfaced as an explicit failure mode.
-
-### 3. The intervention workflow — designed for deliberate engagement
-
-Each claim has three verdicts: **Accept / Edit / Reject**. Edits happen in place but the original AI text is preserved in the audit trail (corrections aren't destructive — they're educational signal for the next model version).
-
-Subtle but deliberate friction:
-
-- **"Accept all" is disabled until every claim has a verdict** — forces engagement, prevents rubber-stamping. Reviewer can still *escalate* or *reject the whole output* in one click.
-- **The submit button morphs**: "Accept all" → "Submit with corrections" the moment they edit anything.
-- **Focus mode** collapses every claim that's already accepted or unflagged. A 9-claim review becomes a 2-claim review of just the parts that need attention.
-
-### 4. Triage at scale
-
-**Risk = confidence × business impact**, rendered as a 4-bar meter — scannable in peripheral vision so the reviewer can pattern-match a queue without reading. A 99%-confident routine call still ranks below a 70%-confident critical call.
-
-**Items auto-sort by risk × uncertainty.** No "default sorting" debate — the riskiest, most uncertain things float up. The live activity feed gives ambient awareness without forcing attention.
-
-### 5. Accountability is a person, not a system
-
-Every decision carries: reviewer name, action verb, rationale, and the count of claims they changed. The audit log is filterable by action and tenant, and shows a **decision distribution chart** that lets a compliance officer spot reviewers who never correct (rubber-stamping) or always reject (over-correction). The chart is itself a UX intervention against drift.
-
-### 6. The multi-tenant chassis
-
-Same primitives, three accent palettes (clinical teal, legal indigo, finance amber), three subject nouns (`patient` / `matter` / `case`), three reviewer personas. The tenant switcher swaps everything contextual; the *interaction model* is identical.
-
-This is the platform-thinking moment: one design system serves three regulated industries without bespoke screens. The same `ConfidenceBadge` works on a radiology finding, a contract clause, and a SAR narrative — because at the UX layer, the human task ("validate, correct, audit") is the same.
+The user is whoever happens to be the human-in-the-loop in *their* AI tool. The plugin's job is to make that human's work fast, deliberate, and traceable — without forcing them into a separate dashboard.
 
 ---
 
-## The design system
+## The demo
 
-Six load-bearing primitives drive every screen:
+The prototype simulates three host AI tools:
+
+| Host (simulated) | Domain | Reviewer |
+|---|---|---|
+| **Aiden-Rad** | radiology triage | Dr. Priya Shah |
+| **ClauseLens** | contract review | Marcus Vance, Esq. |
+| **Watchtower-AML** | BSA/AML compliance | Elena Marquez |
+
+A **Sentinel toggle** in the demo top bar flips the plugin on or off. The wow moment is the toggle: you see exactly what the same AI output looks like with and without oversight wrapped around it.
+
+The host chrome is intentionally rendered as if you're inside *someone else's product* — Sentinel is the embedded layer, not the destination.
+
+---
+
+## What's in the plugin
+
+### Six load-bearing primitives
 
 | Primitive | Job |
 |---|---|
-| `ConfidenceBadge` | Calibrated language, exact % on hover |
-| `ConfidenceDistribution` | Top-k alternatives, inline or stacked |
-| `HallucinationChip` | Distinct flag visual per failure mode |
-| `EvidenceLink` / `UngroundedTag` | Source provenance — or its absence |
-| `RiskMeter` | confidence × business impact, scannable |
-| `AuditEntry` | Reviewer + action + rationale + diff count |
+| `ConfidenceBadge` | Calibrated language ("Likely", "Unsure"), exact % on hover. Avoids percentage fatigue. |
+| `ConfidenceDistribution` | Top-k alternatives the model considered. Makes "uncertainty *about what*" legible. |
+| `HallucinationChip` | Diagonal cross-hatch — visually distinct from low confidence. They demand different responses. |
+| `EvidenceLink` / `UngroundedTag` | Provenance is the antidote to hallucination. Ungrounded claims are surfaced as a first-class failure mode. |
+| `RiskMeter` | confidence × business impact, scannable in peripheral vision. |
+| `AuditEntry` | Reviewer + action + rationale + diff count, persisted to the audit drawer. |
 
-These compose into:
+### The intervention surfaces
 
-| Screen | Role |
+| Surface | Role |
 |---|---|
-| **Overview** | Command center · KPIs · top-risk items · cross-tenant signal · live feed |
-| **Queue** | Triage table · risk-sorted · filter by flag, status, tenant |
-| **Review** | The hero workspace · per-claim verdicts · uncertainty viz · evidence anchors |
-| **Audit** | Decision history · filterable · distribution chart |
-| **Policy** | Confidence thresholds · grounding rules · per-tenant tunable |
+| **Inline `SentinelClaim`** | Wraps each AI claim — confidence, evidence, flags, in-place edit, three verdicts (Accept / Edit / Reject). |
+| **Verdict rail** | Sticky bottom rail; counts decisions in real time; primary action morphs from "Accept all" to "Submit with corrections" the moment any claim is edited; "Accept all" is disabled until every claim has a verdict (prevents rubber-stamping). |
+| **Audit drawer** | Slide-out panel with every reviewer decision Sentinel ever logged for this user — paired with rationale and changed-claim counts. |
+
+---
+
+## Design moves
+
+### 1. Uncertainty without overwhelming
+
+**Calibrated language over raw percentages.** Numbers create false precision and fatigue. Reviewer sees `Likely`, `Unsure`, `Low` — bands that match how clinicians, lawyers, and analysts already speak. The `73%` is one hover away.
+
+**Progressive disclosure.** Confidence renders three ways at three depths: a small badge in the inline claim, a stacked alternatives bar when the band is below `high`, full distribution + rationale on hover. The reviewer pulls more detail only when something asks for it.
+
+### 2. Hallucination ≠ low confidence
+
+The most important visual decision in the system. Both look "concerning" but they demand different responses. So:
+
+- **Hallucination** uses a diagonal cross-hatch — never reads as just another warning
+- **Low confidence** uses a soft pulse on the dot
+- **Out-of-distribution** has its own iconography
+- The pattern (not just color) carries the distinction — works for color-vision-deficient reviewers too
+
+**Provenance as the antidote.** Every claim either anchors to an `EvidenceLink` (with the source quote on hover) or renders `No source cited` with the same hatch pattern. There is no neutral state.
+
+### 3. Designed against rubber-stamping
+
+- "Accept all" is disabled until every claim has a verdict — *forces* engagement
+- Reviewer can still escalate or reject the entire output in one click
+- The submit button morphs to "Submit with corrections" the moment they edit anything
+- Edits are kept in the audit trail alongside the original AI text — corrections aren't destructive, they're educational signal for the next model version
+
+### 4. Host-agnostic by construction
+
+The same `SentinelClaim` component renders against radiology findings, contract clauses, and SAR narratives. The host AI tool just hands Sentinel a claim object; Sentinel handles the rest. That's the platform-thinking proof: one design system, three regulated industries, identical interaction model.
+
+### 5. Accountability as a first-class object
+
+Every decision pairs reviewer name, action verb (`accepted` / `corrected` / `escalated` / `rejected`), rationale, and the count of claims they changed. The audit drawer is right there in the plugin — the reviewer sees their own track record, and a compliance officer can pull the same surface off the wire.
 
 ---
 
 ## The 90-second walkthrough
 
-1. Land on **Overview** — see KPIs, top-risk items, live activity in the right rail.
-2. Click the **tenant switcher** in the sidebar — accent and content swap; chassis stays.
-3. Open the **Review queue** — every row shows risk, calibrated confidence, distribution sparkline, and flag chips.
-4. Click into the **Review** screen — three columns: subject context, claim cards, decision rail. Try Focus mode.
-5. Mark a couple of claims accepted, edit one, reject one. Submit with corrections.
-6. Land on **Audit** — your decision is at the top with rationale and changed-claim count.
+1. Land on the demo. **Sentinel is on by default.** The Aiden-Rad host is showing a chest CT with three AI-generated findings.
+2. **Toggle Sentinel off** in the top bar. Watch the same findings collapse to plain text — that's what AI tools ship today.
+3. **Toggle back on.** Confidence badges, evidence anchors, and the hallucination flag on finding #3 (no source cited) reappear.
+4. **Click into finding #2** ("Unsure"). The alternatives the model considered expand. The reviewer can see the model was 62% on "spiculated nodule, follow-up" but 27% on "post-inflammatory scarring."
+5. **Edit finding #2's text.** The verdict bar updates, primary action becomes "Submit with corrections."
+6. **Reject finding #3** (the hallucinated one). The verdict bar shows `1 edited · 1 rejected`.
+7. **Click Submit with corrections.** The audit drawer opens — your decision is logged with timestamp, reviewer, and changed-claim count.
+8. **Switch host scenarios** (Contract → Fraud) using the buttons in the hero. Same plugin, identical interaction model, host chrome adapts.
 
 ---
 
@@ -118,7 +111,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. No backend needed — all data is mocked in [src/data/mockData.ts](src/data/mockData.ts).
+Open http://localhost:5173. No backend — all data is mocked in [src/data/mockData.ts](src/data/mockData.ts).
 
 ```bash
 npm run build      # typecheck + production build
@@ -127,18 +120,37 @@ npm run preview    # preview the built app
 
 ---
 
-## Tech
+## Architecture
+
+```
+src/
+  components/
+    primitives/   ← the load-bearing UX primitives (the product, in component form)
+    plugin/       ← SentinelClaim, SentinelToggle, VerdictRail, AuditDrawer
+    demo/         ← the demo harness
+      hosts/      ← Radiology / Contract / Fraud — simulated host AI tool chrome
+      DemoFrame.tsx
+      HostChrome.tsx
+    ui/           ← Button, Card, Tooltip — generic shadcn-style primitives
+  state/
+    sentinel.tsx  ← context: enabled, scenario, decisions, audit
+  data/
+    mockData.ts   ← claims, alternatives, evidence per host scenario
+  lib/
+    verticals.tsx ← per-host metadata (brand, accent, reviewer)
+    format.ts, cn.ts
+  types.ts
+```
+
+### Stack
 
 - **Vite** + **React 19** + **TypeScript** (strict)
 - **Tailwind v4** with `@theme` design tokens (OKLCH-based palette, dark default + light mode)
-- **Radix UI** primitives for tooltip, dropdown, switch
-- **React Router v7** for the screen flow
+- **Radix UI** primitives for tooltip, dropdown, switch, dialog
 - **Lucide** icons
-
-All design tokens live in [src/index.css](src/index.css). The primitives are in [src/components/primitives/](src/components/primitives/). Mock data per vertical is in [src/data/mockData.ts](src/data/mockData.ts).
 
 ---
 
 ## Why this exists
 
-Sentinel is a portfolio piece exploring the UX of human-in-the-loop AI in regulated domains. The premise: as AI takes on higher-stakes work, the bottleneck stops being the model and starts being how a human expert can confidently validate it under time pressure. The visible interface becomes the trust contract.
+A UX portfolio piece exploring **AI Trust & Safety as an embedded layer**. The premise: as AI takes on higher-stakes work, oversight becomes infrastructure — something every AI tool needs, almost nobody designs well, and ideally a single layer solves for everyone. Sentinel is one shape that layer could take.
