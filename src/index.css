@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Surfaces — dark mode primary */
+  --color-canvas: oklch(17% 0.012 250);
+  --color-surface-1: oklch(20% 0.014 250);
+  --color-surface-2: oklch(24% 0.016 250);
+  --color-surface-3: oklch(28% 0.018 250);
+  --color-border: oklch(32% 0.018 250);
+  --color-border-strong: oklch(42% 0.02 250);
+
+  /* Foreground */
+  --color-fg: oklch(96% 0.005 250);
+  --color-fg-muted: oklch(72% 0.01 250);
+  --color-fg-subtle: oklch(55% 0.012 250);
+
+  /* Vertical accents */
+  --color-clinical: oklch(72% 0.13 180);
+  --color-clinical-soft: oklch(35% 0.06 180);
+  --color-legal: oklch(70% 0.14 270);
+  --color-legal-soft: oklch(34% 0.07 270);
+  --color-finance: oklch(78% 0.14 75);
+  --color-finance-soft: oklch(38% 0.08 75);
+
+  /* Semantic */
+  --color-confidence-high: oklch(75% 0.14 155);
+  --color-confidence-medium: oklch(80% 0.13 90);
+  --color-confidence-low: oklch(72% 0.16 35);
+  --color-hallucination: oklch(65% 0.22 20);
+  --color-info: oklch(72% 0.12 230);
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+/* Light mode token overrides */
+:root:not(.dark) {
+  --color-canvas: oklch(98% 0.003 250);
+  --color-surface-1: oklch(100% 0 0);
+  --color-surface-2: oklch(96% 0.004 250);
+  --color-surface-3: oklch(93% 0.006 250);
+  --color-border: oklch(89% 0.008 250);
+  --color-border-strong: oklch(80% 0.012 250);
+  --color-fg: oklch(20% 0.012 250);
+  --color-fg-muted: oklch(42% 0.014 250);
+  --color-fg-subtle: oklch(58% 0.012 250);
+  --color-clinical-soft: oklch(94% 0.04 180);
+  --color-legal-soft: oklch(94% 0.04 270);
+  --color-finance-soft: oklch(94% 0.05 75);
+}
+
+html, body, #root { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01", "ss03";
+}
+
+/* Hallucination cross-hatch (works in both themes) */
+.bg-hatch-hallucination {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--color-hallucination) 18%, transparent) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+/* Subtle scan-line for AI-generated content blocks */
+.bg-ai-tint {
+  background-image:
+    linear-gradient(180deg, color-mix(in oklab, var(--color-info) 6%, transparent), transparent 60%);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--color-canvas);
+}
+
+/* Animations */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.animate-pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
+
+@keyframes slide-in-feed {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in-feed { animation: slide-in-feed 280ms ease-out; }
