@@ -1,0 +1,30 @@
+services:
+  # Live-reload dev environment.
+  #   docker compose up dev   ->  http://localhost:5173
+  # Source is bind-mounted; node_modules is kept inside the container so the
+  # host's (potentially different platform) modules don't clobber it.
+  dev:
+    build:
+      context: .
+      target: dev
+    container_name: sentinel-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+  # Production-style static demo behind nginx.
+  #   docker compose up prod  ->  http://localhost:8080
+  prod:
+    build:
+      context: .
+      target: prod
+    container_name: sentinel-prod
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
