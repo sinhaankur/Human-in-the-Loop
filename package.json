@@ -45,6 +45,8 @@
     "pack:lib": "npm run build:lib && npm pack",
     "build:ext": "vite build --config extension/vite.config.ts",
     "dev:ext": "vite --config extension/vite.config.ts",
+    "build:vsc": "npm --prefix vscode run build",
+    "package:vsc": "npm --prefix vscode run package",
     "preview": "vite preview",
     "lint": "tsc -b --noEmit"
   },

@@ -1,0 +1,49 @@
+{
+  "name": "sentinel-vscode",
+  "displayName": "Sentinel — AI Oversight",
+  "description": "Wrap Copilot Chat responses with confidence, evidence, and a verdict workflow — invoked as @sentinel in the chat panel.",
+  "version": "0.1.0",
+  "publisher": "sinhaankur",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sinhaankur/Human-in-the-Loop.git",
+    "directory": "vscode"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": ["AI", "Chat", "Other"],
+  "keywords": ["ai", "trust-and-safety", "human-in-the-loop", "copilot", "oversight"],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "chatParticipants": [
+      {
+        "id": "sentinel-vscode.sentinel",
+        "name": "sentinel",
+        "fullName": "Sentinel",
+        "description": "Wraps the response with confidence, evidence, and hallucination flags.",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "review",
+            "description": "Force Sentinel to review a previously-generated response. Paste the response after the command."
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "watch": "tsc -p . -w",
+    "package": "npm run build && vsce package --out sentinel-vscode-0.1.0.vsix --no-yarn"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^3.2.0",
+    "typescript": "~5.7.2"
+  }
+}

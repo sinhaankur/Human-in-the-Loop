@@ -3,6 +3,9 @@ dist
 dist-lib
 dist-ssr
 extension/dist
+vscode/dist
+vscode/node_modules
+*.vsix
 .DS_Store
 *.local
 .vite

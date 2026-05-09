@@ -2,7 +2,7 @@
 
 An **embeddable oversight layer** for AI tools in high-stakes domains. Sentinel doesn't replace the host AI tool — it wraps the AI's output *in place* so the human expert can validate, correct, and audit without leaving their workflow.
 
-> Ships three ways: a React component library, a Docker demo, and a Chrome extension that overlays on real ChatGPT.
+> Ships four ways: a React component library, a Docker demo, a Chrome extension that overlays on real ChatGPT, and a VS Code extension that wraps Copilot Chat responses.
 > React + TypeScript + Tailwind v4 · simulated host AI tools across radiology, legal, finance.
 
 ---
@@ -56,14 +56,15 @@ The host chrome is intentionally rendered as if you're inside *someone else's pr
 
 ---
 
-## Three delivery shapes
+## Four delivery shapes
 
-The same component code ships three ways. Each shape exists to test the "embedded layer" thesis against a different integration constraint.
+The same Sentinel framing ships four ways. Each shape exists to test the "embedded oversight layer" thesis against a different integration constraint — and a different boundary the host AI tool owns.
 
 | Shape | What it is | Who it's for |
 |---|---|---|
 | **React library** ([`sentinel-react`](#as-a-react-component-library)) | npm package: `<SentinelClaim>`, `<VerdictRail>`, `<AuditDrawer>`, primitives, types. ESM + CJS + `.d.ts` + a single CSS file. | AI-tool teams who control their own React UI and want to drop oversight in. |
 | **Chrome extension** ([`extension/`](#as-a-chrome-extension)) | MV3 extension that overlays Sentinel on real ChatGPT responses via a content script + Shadow DOM. Plus a packaged sandbox demo that always works. | End users wanting oversight on AI tools they don't own. Proof the framing isn't React-specific. |
+| **VS Code extension** ([`vscode/`](#as-a-vs-code-extension)) | `@sentinel` chat participant. Type `@sentinel <question>` in Copilot Chat; Sentinel calls a model via `vscode.lm`, wraps each paragraph as a confidence/evidence/flag block in the chat panel. | Developers who already live in Copilot Chat and want oversight on its answers without leaving the editor. |
 | **Docker demo** ([`Dockerfile`](Dockerfile)) | Multi-stage build — `dev` (Vite + HMR) and `prod` (nginx static). One command, no Node setup. | Portfolio reviewers, demo machines, anyone evaluating the prototype without installing dependencies. |
 
 ---
@@ -184,6 +185,23 @@ The content script renders into a Shadow DOM next to each assistant message, so 
 
 AI vendors don't surface calibrated per-claim confidence or evidence anchors yet — the model internals exist, but the consumer UIs don't expose them. So the extension fabricates this metadata deterministically from the response text (same input → same numbers, so the demo is stable). Treat Sentinel-on-ChatGPT as a **proposition for vendors**: this is what oversight UI should look like when they expose what their models already know. The overlay says so plainly to anyone who clicks in.
 
+### As a VS Code extension
+
+```bash
+npm run build:vsc       # compile vscode/src → vscode/dist
+npm run package:vsc     # produces vscode/sentinel-vscode-0.1.0.vsix
+```
+
+Install the `.vsix` in VS Code: **Extensions** view → **…** menu → **Install from VSIX…** → select the file. Reload, then open **Copilot Chat** (requires GitHub Copilot installed and signed in).
+
+Type `@sentinel <question>` — Sentinel calls a Copilot-provided model via `vscode.lm`, parses the response into per-paragraph claims, and renders each one as a GitHub-style alert block (NOTE / TIP / IMPORTANT / WARNING) annotated with confidence, evidence, alternatives, and flags. The `/review` subcommand wraps a previously-generated response you paste in — useful for auditing answers from elsewhere.
+
+#### Why a chat participant rather than an overlay
+
+VS Code's extension model sandboxes webviews — one extension cannot inject DOM into another extension's chat panel the way a browser content script can. The chat-participant API is the actual analogue: Sentinel registers itself as a first-class chat addressee (`@sentinel`) and renders inside the Copilot Chat panel because Copilot Chat is doing the rendering, not us.
+
+The fabricated-metadata caveat from the Chrome extension applies the same way here, and the extension states it in the chat footer.
+
 ---
 
 ## Architecture
@@ -212,6 +230,15 @@ extension/                  ← MV3 Chrome extension
     sandbox/                ← packaged DemoFrame (always-works fallback)
     shared/                 ← storage + typed message contract
   icons/
+
+vscode/                     ← VS Code extension (Copilot Chat participant)
+  package.json              ← contributes.chatParticipants → @sentinel
+  src/
+    extension.ts            ← activate(): registers the participant
+    sentinel-participant.ts ← chat handler: lm.sendRequest → claims → markdown
+    fakeInference.ts        ← deterministic metadata (mirrors the Chrome ext)
+    formatters.ts           ← markdown formatters (GitHub alerts per band)
+  icons/                    ← shared with the Chrome extension
 
 Dockerfile                  ← multi-stage: deps → dev → build → prod (nginx)
 docker-compose.yml          ← `dev` + `prod` services
