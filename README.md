@@ -2,7 +2,8 @@
 
 An **embeddable oversight layer** for AI tools in high-stakes domains. Sentinel doesn't replace the host AI tool — it wraps the AI's output *in place* so the human expert can validate, correct, and audit without leaving their workflow.
 
-> Live demo · React + TypeScript + Tailwind v4 · simulated host AI tools across radiology, legal, finance.
+> Ships three ways: a React component library, a Docker demo, and a Chrome extension that overlays on real ChatGPT.
+> React + TypeScript + Tailwind v4 · simulated host AI tools across radiology, legal, finance.
 
 ---
 
@@ -55,6 +56,18 @@ The host chrome is intentionally rendered as if you're inside *someone else's pr
 
 ---
 
+## Three delivery shapes
+
+The same component code ships three ways. Each shape exists to test the "embedded layer" thesis against a different integration constraint.
+
+| Shape | What it is | Who it's for |
+|---|---|---|
+| **React library** ([`sentinel-react`](#as-a-react-component-library)) | npm package: `<SentinelClaim>`, `<VerdictRail>`, `<AuditDrawer>`, primitives, types. ESM + CJS + `.d.ts` + a single CSS file. | AI-tool teams who control their own React UI and want to drop oversight in. |
+| **Chrome extension** ([`extension/`](#as-a-chrome-extension)) | MV3 extension that overlays Sentinel on real ChatGPT responses via a content script + Shadow DOM. Plus a packaged sandbox demo that always works. | End users wanting oversight on AI tools they don't own. Proof the framing isn't React-specific. |
+| **Docker demo** ([`Dockerfile`](Dockerfile)) | Multi-stage build — `dev` (Vite + HMR) and `prod` (nginx static). One command, no Node setup. | Portfolio reviewers, demo machines, anyone evaluating the prototype without installing dependencies. |
+
+---
+
 ## Design moves
 
 ### 1. Uncertainty without overwhelming
@@ -104,7 +117,9 @@ Every decision pairs reviewer name, action verb (`accepted` / `corrected` / `esc
 
 ---
 
-## Run locally
+## Get it running
+
+### The demo (local Vite)
 
 ```bash
 npm install
@@ -118,28 +133,91 @@ npm run build      # typecheck + production build
 npm run preview    # preview the built app
 ```
 
+### The demo (Docker)
+
+One command, no Node version juggling:
+
+```bash
+docker compose up prod    # nginx-served static demo  →  http://localhost:8080
+docker compose up dev     # Vite + HMR on the bind-mounted source  →  http://localhost:5173
+```
+
+Multi-stage [Dockerfile](Dockerfile) handles install + build + serve. The prod image is `nginx:alpine` with SPA fallback and immutable caching for hashed assets ([docker/nginx.conf](docker/nginx.conf)).
+
+### As a React component library
+
+```bash
+npm run build:lib    # emits dist-lib/{sentinel.mjs, sentinel.cjs, styles.css, *.d.ts}
+npm run pack:lib     # produces sentinel-react-0.1.0.tgz
+```
+
+Then in any React host:
+
+```tsx
+import { SentinelProvider, SentinelClaim, VerdictRail, AuditDrawer } from "sentinel-react";
+import "sentinel-react/styles.css";
+
+<SentinelProvider>
+  <SentinelClaim claim={hostClaim} />
+  <VerdictRail />
+  <AuditDrawer />
+</SentinelProvider>
+```
+
+React/ReactDOM are peer deps; Radix, Lucide, Tailwind utilities are bundled. Build config: [vite.lib.config.ts](vite.lib.config.ts).
+
+### As a Chrome extension
+
+```bash
+npm run build:ext    # emits extension/dist/ — a loadable MV3 unpacked extension
+```
+
+Then: Chrome → `chrome://extensions` → enable Developer mode → **Load unpacked** → select `extension/dist`.
+
+- **Toolbar popup**: pause/resume oversight, see audit count, launch the bundled sandbox demo.
+- **Live overlay**: open `chatgpt.com`, ask anything; ~1.5s after the response settles, a Sentinel badge appears below the message. Click to expand into the verdict UI.
+- **Sandbox**: opens from the popup as a packaged tab — works offline, immune to ChatGPT redesigns.
+
+The content script renders into a Shadow DOM next to each assistant message, so host CSS and Sentinel CSS can't bleed into each other ([extension/src/content/index.tsx](extension/src/content/index.tsx)). Confidence and evidence are deterministically fabricated from the response text — see [the speculative-concept caveat](#the-speculative-concept-caveat) below.
+
+#### The speculative-concept caveat
+
+Real LLMs don't expose calibrated per-claim confidence or per-claim evidence anchors to consumer UIs. The extension fabricates this metadata in a hash-deterministic way (same response text → same metadata, so demos are stable across reloads). Sentinel-on-ChatGPT is therefore a **product concept**: "what oversight UI would look like *if* AI vendors exposed model internals." That framing is shown in the overlay itself — no pretending to be calibrated.
+
 ---
 
 ## Architecture
 
 ```
-src/
+src/                        ← React library source (sentinel-react)
   components/
-    primitives/   ← the load-bearing UX primitives (the product, in component form)
+    primitives/   ← the load-bearing UX primitives
     plugin/       ← SentinelClaim, SentinelToggle, VerdictRail, AuditDrawer
-    demo/         ← the demo harness
-      hosts/      ← Radiology / Contract / Fraud — simulated host AI tool chrome
-      DemoFrame.tsx
-      HostChrome.tsx
-    ui/           ← Button, Card, Tooltip — generic shadcn-style primitives
-  state/
-    sentinel.tsx  ← context: enabled, scenario, decisions, audit
-  data/
-    mockData.ts   ← claims, alternatives, evidence per host scenario
-  lib/
-    verticals.tsx ← per-host metadata (brand, accent, reviewer)
-    format.ts, cn.ts
+    demo/         ← the demo harness — Radiology / Contract / Fraud hosts
+    ui/           ← Button, Card, Tooltip
+  state/sentinel.tsx        ← context: enabled, scenario, decisions, audit
+  data/mockData.ts          ← claims, alternatives, evidence per scenario
+  lib/                      ← verticals, format, cn
   types.ts
+  lib-entry.ts              ← public npm-package surface
+
+extension/                  ← MV3 Chrome extension
+  manifest.json             ← MV3 manifest (chatgpt.com host permissions)
+  vite.config.ts            ← @crxjs/vite-plugin build
+  src/
+    background/             ← service worker (chrome.storage + message bus)
+    content/                ← MutationObserver, Shadow DOM, ChatGPT adapter,
+                              fakeInference (deterministic metadata)
+    popup/                  ← toolbar popup
+    sandbox/                ← packaged DemoFrame (always-works fallback)
+    shared/                 ← storage + typed message contract
+  icons/
+
+Dockerfile                  ← multi-stage: deps → dev → build → prod (nginx)
+docker-compose.yml          ← `dev` + `prod` services
+docker/nginx.conf           ← SPA fallback + asset caching
+vite.config.ts              ← demo app build
+vite.lib.config.ts          ← npm library build (ESM + CJS + dts + styles.css)
 ```
 
 ### Stack
