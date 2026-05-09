@@ -6,6 +6,7 @@ import { useScenarioItem } from "@/state/sentinel";
 /** ClauseLens — a fictional contract review AI. */
 export function ContractHost() {
   const item = useScenarioItem();
+  if (!item) return null;
 
   return (
     <HostChrome

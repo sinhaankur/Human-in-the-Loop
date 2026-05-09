@@ -2,7 +2,7 @@ import { Check, Pencil, ArrowUpRight, X } from "lucide-react";
 import type { AuditRecord } from "@/types";
 import { cn } from "@/lib/cn";
 import { relativeTime } from "@/lib/format";
-import { VERTICAL_META } from "@/lib/verticals";
+import { VERTICAL_THEME } from "@/lib/verticals";
 
 interface Props {
   record: AuditRecord;
@@ -38,7 +38,7 @@ const ACTION_META = {
 
 export function AuditEntry({ record, className }: Props) {
   const meta = ACTION_META[record.action];
-  const vertical = VERTICAL_META[record.vertical];
+  const vertical = VERTICAL_THEME[record.vertical];
   const { Icon } = meta;
 
   return (

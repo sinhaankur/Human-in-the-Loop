@@ -6,9 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { AuditRecord, DecisionAction, Vertical } from "@/types";
-import { REVIEW_ITEMS } from "@/data/mockData";
-import { VERTICAL_META } from "@/lib/verticals";
+import type { AuditRecord, DecisionAction, ReviewItem, Vertical } from "@/types";
 
 export type ClaimVerdict = "pending" | "accepted" | "edited" | "rejected";
 
@@ -38,9 +36,36 @@ interface SentinelState {
 
 const SentinelCtx = createContext<SentinelState | null>(null);
 
-export function SentinelProvider({ children }: { children: ReactNode }) {
+export interface SentinelProviderProps {
+  children: ReactNode;
+  /**
+   * The review items the host wants Sentinel to oversee. Required for the
+   * VerdictRail / AuditDrawer to function — they need an item to count
+   * claims against and to attribute audit records to. Pass an empty array
+   * (the default) when using SentinelClaim standalone, e.g. in the
+   * extension overlay where each claim is independent.
+   */
+  items?: ReviewItem[];
+  /**
+   * How to attribute reviewer name on audit records, given the active
+   * scenario. Defaults to "Reviewer" — hosts should pass the real signed-in
+   * user (or a function looking it up from app session).
+   */
+  reviewerFor?: (vertical: Vertical) => string;
+  /** Which scenario starts active. Defaults to the first item's vertical. */
+  initialScenario?: Vertical;
+}
+
+export function SentinelProvider({
+  children,
+  items = [],
+  reviewerFor,
+  initialScenario,
+}: SentinelProviderProps) {
   const [enabled, setEnabled] = useState(true);
-  const [scenario, setScenarioRaw] = useState<Vertical>("clinical");
+  const [scenario, setScenarioRaw] = useState<Vertical>(
+    initialScenario ?? items[0]?.vertical ?? "clinical"
+  );
   const [decisions, setDecisions] = useState<Record<string, ClaimDecision>>({});
   const [audit, setAudit] = useState<AuditRecord[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,9 +85,8 @@ export function SentinelProvider({ children }: { children: ReactNode }) {
 
   const recordAudit = useCallback(
     (action: DecisionAction, rationale?: string) => {
-      const item = REVIEW_ITEMS.find((it) => it.vertical === scenario);
+      const item = items.find((it) => it.vertical === scenario);
       if (!item) return;
-      const meta = VERTICAL_META[scenario];
       const changedClaimIds = Object.entries(decisions)
         .filter(([, v]) => v.verdict === "edited" || v.verdict === "rejected")
         .map(([id]) => id);
@@ -72,7 +96,7 @@ export function SentinelProvider({ children }: { children: ReactNode }) {
         itemTitle: item.title,
         vertical: scenario,
         action,
-        reviewer: meta.reviewer,
+        reviewer: reviewerFor?.(scenario) ?? "Reviewer",
         rationale,
         changedClaimIds: changedClaimIds.length > 0 ? changedClaimIds : undefined,
         timestamp: new Date().toISOString(),
@@ -80,7 +104,7 @@ export function SentinelProvider({ children }: { children: ReactNode }) {
       setAudit((prev) => [record, ...prev]);
       setDecisions({});
     },
-    [scenario, decisions]
+    [scenario, decisions, items, reviewerFor]
   );
 
   const value = useMemo<SentinelState>(
@@ -111,8 +135,17 @@ export function SentinelProvider({ children }: { children: ReactNode }) {
     ]
   );
 
-  return <SentinelCtx.Provider value={value}>{children}</SentinelCtx.Provider>;
+  // Cache the items lookup so useScenarioItem doesn't trigger a context-wide
+  // re-render when only the items array reference changes.
+  const itemsRef = useMemo(() => items, [items]);
+  return (
+    <SentinelCtx.Provider value={value}>
+      <ItemsCtx.Provider value={itemsRef}>{children}</ItemsCtx.Provider>
+    </SentinelCtx.Provider>
+  );
 }
+
+const ItemsCtx = createContext<ReviewItem[]>([]);
 
 export function useSentinel() {
   const ctx = useContext(SentinelCtx);
@@ -120,8 +153,14 @@ export function useSentinel() {
   return ctx;
 }
 
-/** Convenience: the active scenario's primary review item from mock data */
-export function useScenarioItem() {
+/**
+ * The active scenario's review item, drawn from the items the provider was
+ * configured with. Returns undefined when the provider has no items (e.g.
+ * standalone SentinelClaim usage), so callers must handle the missing case
+ * — VerdictRail and AuditDrawer no-op when there's no item.
+ */
+export function useScenarioItem(): ReviewItem | undefined {
   const { scenario } = useSentinel();
-  return REVIEW_ITEMS.find((it) => it.vertical === scenario)!;
+  const items = useContext(ItemsCtx);
+  return items.find((it) => it.vertical === scenario);
 }

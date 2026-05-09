@@ -6,6 +6,7 @@ import { useScenarioItem } from "@/state/sentinel";
 /** Watchtower-AML — a fictional BSA/AML compliance AI. */
 export function FraudHost() {
   const item = useScenarioItem();
+  if (!item) return null;
 
   return (
     <HostChrome

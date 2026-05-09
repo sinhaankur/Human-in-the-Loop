@@ -17,14 +17,14 @@ export function VerdictRail() {
 
   const counts = useMemo(() => {
     const c = { accepted: 0, edited: 0, rejected: 0, pending: 0 };
-    item.claims.forEach((claim) => {
+    item?.claims.forEach((claim) => {
       const v = decisions[claim.id]?.verdict ?? "pending";
       c[v] += 1;
     });
     return c;
-  }, [item.claims, decisions]);
+  }, [item, decisions]);
 
-  if (!enabled) return null;
+  if (!enabled || !item) return null;
 
   const total = item.claims.length;
   const decided = total - counts.pending;

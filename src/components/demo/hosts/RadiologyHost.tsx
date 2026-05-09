@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 /** Aiden-Rad — a fictional radiology triage AI workstation. */
 export function RadiologyHost() {
   const item = useScenarioItem();
+  if (!item) return null;
 
   return (
     <HostChrome
