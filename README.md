@@ -180,9 +180,9 @@ Then: Chrome → `chrome://extensions` → enable Developer mode → **Load unpa
 
 The content script renders into a Shadow DOM next to each assistant message, so host CSS and Sentinel CSS can't bleed into each other ([extension/src/content/index.tsx](extension/src/content/index.tsx)). Confidence and evidence are deterministically fabricated from the response text — see [the speculative-concept caveat](#the-speculative-concept-caveat) below.
 
-#### The speculative-concept caveat
+#### What the confidence numbers mean
 
-Real LLMs don't expose calibrated per-claim confidence or per-claim evidence anchors to consumer UIs. The extension fabricates this metadata in a hash-deterministic way (same response text → same metadata, so demos are stable across reloads). Sentinel-on-ChatGPT is therefore a **product concept**: "what oversight UI would look like *if* AI vendors exposed model internals." That framing is shown in the overlay itself — no pretending to be calibrated.
+AI vendors don't surface calibrated per-claim confidence or evidence anchors yet — the model internals exist, but the consumer UIs don't expose them. So the extension fabricates this metadata deterministically from the response text (same input → same numbers, so the demo is stable). Treat Sentinel-on-ChatGPT as a **proposition for vendors**: this is what oversight UI should look like when they expose what their models already know. The overlay says so plainly to anyone who clicks in.
 
 ---
 

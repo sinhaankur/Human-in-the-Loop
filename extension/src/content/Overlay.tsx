@@ -61,14 +61,14 @@ export function Overlay({ claims, hostLabel }: Props) {
         </button>
 
         {expanded && (
-          <div className="border-t border-border bg-surface-1/40 px-4 py-3 space-y-3 max-h-[500px] overflow-y-auto">
+          <div className="border-t border-border bg-surface-1/40 px-4 py-3 space-y-3 max-h-125 overflow-y-auto">
             {claims.map((c) => (
               <SentinelClaim key={c.id} claim={c} />
             ))}
             <p className="text-[10px] text-fg-subtle leading-snug pt-1">
-              Confidence and evidence shown here are illustrative — vendors do
-              not currently expose this metadata. Sentinel is a speculative
-              concept for what oversight UI would look like if they did.
+              AI vendors don't surface calibrated per-claim confidence or
+              evidence anchors yet. This is what oversight UI should look
+              like when they do.
             </p>
           </div>
         )}
