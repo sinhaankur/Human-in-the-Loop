@@ -43,6 +43,8 @@
     "build": "tsc -b && vite build",
     "build:lib": "vite build --config vite.lib.config.ts",
     "pack:lib": "npm run build:lib && npm pack",
+    "build:ext": "vite build --config extension/vite.config.ts",
+    "dev:ext": "vite --config extension/vite.config.ts",
     "preview": "vite preview",
     "lint": "tsc -b --noEmit"
   },
@@ -65,7 +67,9 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@crxjs/vite-plugin": "^2.4.0",
     "@tailwindcss/vite": "^4.0.0",
+    "@types/chrome": "^0.1.42",
     "@types/node": "^25.6.2",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
