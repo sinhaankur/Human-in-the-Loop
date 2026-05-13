@@ -261,3 +261,9 @@ vite.lib.config.ts          ← npm library build (ESM + CJS + dts + styles.css)
 ## Why this exists
 
 A UX portfolio piece exploring **AI Trust & Safety as an embedded layer**. The premise: as AI takes on higher-stakes work, oversight becomes infrastructure — something every AI tool needs, almost nobody designs well, and ideally a single layer solves for everyone. Sentinel is one shape that layer could take.
+
+## Companion piece — Recourse
+
+Sentinel is oversight *of* AI by experts. Its sibling project, **[Recourse](https://github.com/sinhaankur/Recourse)** ([live demo](https://sinhaankur.github.io/Recourse/)), is oversight of *institutions* by AI on behalf of the person they're squeezing — consumer-side trust-and-safety for insurance denials, surprise medical bills, and parity violations. Same primitives (calibrated confidence, evidence anchors, cross-hatch pattern for fabricated content), inverted reader.
+
+Together they're a deliberate pair: AI Trust & Safety at both ends of the asymmetry — the expert reviewing the AI, and the citizen the AI is reviewing for.
