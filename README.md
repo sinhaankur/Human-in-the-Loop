@@ -5,6 +5,8 @@ An **embeddable oversight layer** for AI tools in high-stakes domains. Sentinel 
 > Ships four ways: a React component library, a Docker demo, a Chrome extension that overlays on real ChatGPT, and a VS Code extension that wraps Copilot Chat responses.
 > React + TypeScript + Tailwind v4 · simulated host AI tools across radiology, legal, finance.
 
+**[Live demo →](https://sinhaankur.github.io/Human-in-the-Loop/)** &nbsp;·&nbsp; **[How it works (code walkthrough) →](docs/HOW_IT_WORKS.md)**
+
 ---
 
 ## The thesis
